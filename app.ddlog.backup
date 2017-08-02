@@ -1,0 +1,213 @@
+## Random variable to predict #################################################
+
+# This application's goal is to predict whether a given pair of person mention
+# are indicating a spouse relationship or not.
+@extraction
+has_legal_penalty?(
+    @key
+    @references(relation="legal_penalty_mention", column="mention_id", alias="p")
+    p_id text
+).
+
+
+## Input Data #################################################################
+
+@source
+law(
+    @key
+    @distributed_by
+    id text,
+    @searchable
+    content text
+).
+
+
+## NLP markup #################################################################
+@source
+sentence(
+    @key
+    @distributed_by
+    # XXX This breaks the search index.  @source should not be derived from another @source
+    #@references(relation="law", column="id")
+    doc_id         text,
+    @key
+    sentence_index int,
+    @searchable
+    sentence_text  text,
+    tokens         text[],
+    pos_tags       text[],
+    ner_tags       text[],
+    dep_types      text[],
+    dep_heads      int[]
+).
+
+function nlp_markup over (
+        doc_id text,
+        content text
+    ) returns rows like sentence
+    implementation "udf/nlp_markup.sh" handles tsv lines.
+
+sentence += nlp_markup(doc_id, content) :-
+    law(doc_id, content).
+
+
+## Extract legal penalties candidates ##########################################################
+@extraction
+legal_penalty_mention(
+    @key
+    mention_id text,
+    @searchable
+    mention_text text,
+    @searchable
+    mention_type text,
+    @distributed_by
+    @references(relation="sentence", column="doc_id", alias="appears_in")
+    doc_id text,
+    @references(relation="sentence", column="sentence_index", alias="appears_in")
+    sentence_index int,
+    begin_index int,
+    end_index int
+).
+
+function extract_legal_penalty_mention over (
+        doc_id text,
+        sentence_index int,
+        tokens text[],
+        pos_tags text[]
+    ) returns rows like legal_penalty_mention
+    implementation "udf/extract_legal_penalty_mention.py" handles tsv lines.
+
+legal_penalty_mention += extract_legal_penalty_mention(
+    doc_id, sentence_index, tokens, pos_tags
+) :- sentence(doc_id, sentence_index, _, tokens, pos_tags, _, _, _).
+
+
+## Extract crime candidates ##########################################################
+@extraction
+crime_mention(
+    @key
+    mention_id text,
+    @searchable
+    mention_text text,
+    @searchable
+    mention_type text,
+    @distributed_by
+    @references(relation="sentence", column="doc_id", alias="appears_in")
+    doc_id text,
+    @references(relation="sentence", column="sentence_index", alias="appears_in")
+    sentence_index int,
+    begin_index int,
+    end_index int,
+    associated_penalty_id text
+).
+
+function extract_crime_mention over (
+        doc_id text,
+        sentence_index int,
+        tokens text[],
+        pos_tags text[],
+        penalty_id text,
+        penalty_begin_index int,
+        penalty_end_index int
+    ) returns rows like crime_mention
+    implementation "udf/extract_crime_mention.py" handles tsv lines.
+
+crime_mention += extract_crime_mention(
+    doc_id, sentence_index, tokens, pos_tags, penalty_id, penalty_begin_index, penalty_end_index
+) :- sentence(doc_id, sentence_index, _, tokens, pos_tags, _, _, _),
+     legal_penalty_mention(penalty_id, _, _, doc_id, sentence_index, penalty_begin_index, penalty_end_index).
+
+
+## Feature Extraction #########################################################
+
+# Feature extraction for legal penalties
+@extraction
+legal_penalty_feature(
+    @key
+    @references(relation="has_legal_penalty", column="p_id", alias="has_legal_penalty")
+    p_id text,
+    @key
+    feature text
+).
+
+function extract_legal_penalty_feature over (
+        p_id text,
+        p_begin_index int,
+        p_end_index int,
+        doc_id text,
+        sent_index int,
+        tokens text[],
+        pos_tags text[],
+        ner_tags text[],
+        dep_types text[],
+        dep_heads int[]
+    ) returns rows like legal_penalty_feature
+    implementation "udf/extract_legal_penalty_feature.py" handles tsv lines.
+
+legal_penalty_feature += extract_legal_penalty_feature(
+    p_id, p_begin_index, p_end_index,
+    doc_id, sent_index, tokens, pos_tags, ner_tags, dep_types, dep_heads
+) :-
+    legal_penalty_mention(p_id, _, _, doc_id, sent_index, p_begin_index, p_end_index),
+    sentence(doc_id, sent_index, _, tokens, pos_tags, ner_tags, dep_types, dep_heads).
+
+
+## Distant Supervision ########################################################
+@extraction
+legal_penalty_label(
+    @key
+    @references(relation="has_legal_penalty", column="p_id", alias="has_legal_penalty")
+    p_id text,
+    @navigable
+    label int,
+    @navigable
+    rule_id text
+).
+
+# make sure all elements in legal_penalty_mention are considered as unsupervised examples
+legal_penalty_label(p, 0, NULL) :- legal_penalty_mention(p, _, _, _, _, _, _).
+
+# supervision by heuristic rules in a UDF
+function supervise_legal_penalty over (
+        p_id text, p_begin int, p_end int,
+        doc_id         text,
+        sentence_index int,
+        sentence_text  text,
+        tokens         text[],
+        pos_tags       text[],
+        ner_tags       text[],
+        dep_types      text[],
+        dep_heads    int[]
+    ) returns (
+        p_id text, label int, rule_id text
+    )
+    implementation "udf/supervise_legal_penalty.py" handles tsv lines.
+
+legal_penalty_label += supervise_legal_penalty(
+    p_id, p_begin, p_end,
+    doc_id, sentence_index, sentence_text,
+    tokens, pos_tags, ner_tags, dep_types, dep_heads
+) :- legal_penalty_mention(p_id, p_text, p_type, doc_id, sentence_index, p_begin, p_end),
+    sentence(
+        doc_id, sentence_index, sentence_text,
+        tokens, pos_tags, ner_tags, dep_types, dep_heads
+    ).
+
+# resolve multiple labels by majority vote (summing the labels in {-1,0,1})
+legal_penalty_label_resolved(p_id, SUM(vote)) :- legal_penalty_label(p_id, vote, rule_id).
+
+# assign the resolved labels for the has legal penalty relation
+has_legal_penalty(p_id) = if l > 0 then TRUE
+                      else if l < 0 then FALSE
+                      else NULL end :- legal_penalty_label_resolved(p_id, l).
+
+###############################################################################
+
+
+## Inference Rules ############################################################
+
+# Features
+@weight(f)
+has_legal_penalty(p_id) :-
+    legal_penalty_mention(p_id, _, _, _, _, _, _),
+    legal_penalty_feature(p_id, f).
