@@ -13,7 +13,8 @@ import divlaw
     totalSec       ="int",
     sec_index      ="int",
     sec_start      ="int",
-    sec_end        ="int"
+    sec_end        ="int",
+    sec_name		="text"
     :[])
 def extract(
     id 			="text",
@@ -37,6 +38,7 @@ def extract(
 				i,
 				chap['secs'][i]['start'],
 				chap['secs'][i]['end'],
+				chap['secs'][i]['name']
 			]
 	else :
 		yield [
@@ -47,4 +49,5 @@ def extract(
 			0,
 			chap_start,
 			chap_end,
+			None
 		]

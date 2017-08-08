@@ -92,35 +92,11 @@ def getNumericalSymbol(sentence_text) :
     for i in match:
         return sentence_text[i.span()[0]:i.span()[1]]
     return None
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+def toLowerCase(string):
+    s = to_unicode(string)
+    s = s.lower()
+    s = s.encode('utf-8')
+    return s
 
     # s = to_unicode(string)
     # match = re.finditer(r"[0-9]", s)

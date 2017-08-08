@@ -122,3 +122,13 @@ run.sh
 /udf/util
 /udf/vietnamese-stopwords
 /udf/vn-nlp-deepdive
+/udf/divlaw.pyc
+/udf/test.py
+/udf/test1.py
+/udf/test2.py
+/udf/law.csv
+/udf/filename.txt
+/udf/__init__.py
+/udf/__init__.py
+/udf/nlp_markup.sh
+/udf/refine_data.sh

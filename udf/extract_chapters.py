@@ -12,7 +12,8 @@ import divlaw
     totalChap       ="int",
     chap_index      ="int",
     chap_start      ="int",
-    chap_end        ="int"
+    chap_end        ="int",
+    chap_name		="text"
     :[])
 def extract(
     id 			="text",
@@ -20,7 +21,6 @@ def extract(
     part_index 	="int",
     part_start 	="int",
     part_end 	="int"
-
     ):
 
 	rs = divlaw.divPart(content)
@@ -36,6 +36,7 @@ def extract(
 				i,
 				part['chaps'][i]['start'],
 				part['chaps'][i]['end'],
+				part['chaps'][i]['name']
 			]
 	else :
 		yield [
@@ -45,4 +46,5 @@ def extract(
 			0,
 			part_start,
 			part_end,
+			None
 		]

@@ -11,7 +11,8 @@ import divlaw
 		totalPart      ="int",
     	part_index     ="int",
    		part_start     ="int",
-    	part_end       ="int"
+    	part_end       ="int",
+    	part_name	="text"
     :[])
 def extract(
         id         = "text",
@@ -28,6 +29,7 @@ def extract(
 				i,
 				divlaw.getPart(a,i)['start'],
 				divlaw.getPart(a,i)['end'],
+				divlaw.getPart(a,i)['name'],
 			]
 	else :
 		yield [
@@ -36,4 +38,5 @@ def extract(
 			0,
 			divlaw.getPart(a,0)['start'],
 			divlaw.getPart(a,0)['end'],
+			None,
 		]

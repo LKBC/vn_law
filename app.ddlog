@@ -20,7 +20,7 @@ articles(
 
 ######################
 @extraction
-parts( ##phan
+parts(
     @key
     @distributed_by
     # XXX This breaks the search index.  @source should not be derived from another @source
@@ -30,7 +30,8 @@ parts( ##phan
     @key
     part_index      int,
     part_start      int,
-    part_end        int
+    part_end        int,
+    name_part       text
 ).
 
 function extract_parts over(
@@ -43,7 +44,7 @@ parts += extract_parts(id, content) :- articles(id, content,  _, _, _, _, _, _, 
 
 ###############################################    
 @extraction
-chapters(  ##chuong
+chapters(
     @key
     @distributed_by
     # XXX This breaks the search index.  @source should not be derived from another @source
@@ -55,7 +56,8 @@ chapters(  ##chuong
     @key
     chap_index      int,
     chap_start      int,
-    chap_end        int
+    chap_end        int,
+    chap_name       text
 ).
 function extract_chapters over(
     id text,
@@ -66,11 +68,11 @@ function extract_chapters over(
 )   returns rows like chapters
         implementation "udf/extract_chapters.py" handles tsv lines.
 
-chapters += extract_chapters(id, content,part_index,part_start,part_end) :- articles(id, content,  _, _, _, _, _, _, _,_),parts(id,_,part_index,part_start,part_end).
+chapters += extract_chapters(id, content,part_index,part_start,part_end) :- articles(id, content,  _, _, _, _, _, _, _,_),parts(id,_,part_index,part_start,part_end,_).
 
 ################################
 @extraction
-sections( ##muc
+sections(
     @key
     @distributed_by
     # XXX This breaks the search index.  @source should not be derived from another @source
@@ -82,7 +84,8 @@ sections( ##muc
     totalSec       int,
     sec_index      int,
     sec_start      int,
-    sec_end        int
+    sec_end        int,
+    sec_name        text
 ).
 function extract_sections over(
     id text,
@@ -94,11 +97,11 @@ function extract_sections over(
 )   returns rows like chapters
         implementation "udf/extract_sections.py" handles tsv lines.
 
-sections += extract_sections(id, content,part_index,chap_index,chap_start,chap_end) :- articles(id, content,  _, _, _, _, _, _, _,_),chapters(id,part_index,_,chap_index,chap_start,chap_end).
+sections += extract_sections(id, content,part_index,chap_index,chap_start,chap_end) :- articles(id, content,  _, _, _, _, _, _, _,_),chapters(id,part_index,_,chap_index,chap_start,chap_end,_).
 
 ################################
 @extraction
-laws( ##dieu
+laws(
     @key
     @distributed_by
     # XXX This breaks the search index.  @source should not be derived from another @source
@@ -125,7 +128,7 @@ function extract_laws over(
 )   returns rows like laws
         implementation "udf/extract_laws.py" handles tsv lines.
 
-laws += extract_laws(id, content,part_index,chap_index,sec_index,sec_start,sec_end) :- articles(id, content,  _, _, _, _, _, _, _,_),sections(id,part_index,chap_index,_,sec_index,sec_start,sec_end).
+laws += extract_laws(id, content,part_index,chap_index,sec_index,sec_start,sec_end) :- articles(id, content,  _, _, _, _, _, _, _,_),sections(id,part_index,chap_index,_,sec_index,sec_start,sec_end,_).
 ##########################
 @extraction
 items(
@@ -139,7 +142,7 @@ items(
     sec_index      int,
     law_index      int,
     totalItem      int,
-    item_index      int,
+    item_index      int, 
     item_start      int,
     item_end        int,
     item_name       text,
@@ -160,7 +163,7 @@ function extract_items over(
 items += extract_items(id, content,part_index,chap_index,sec_index, law_index, law_start, law_end) :- articles(id, content,  _, _, _, _, _, _, _,_), laws(id, part_index, chap_index, sec_index, _, law_index, law_start, law_end, _, _).
 ###########################
 @extraction
-points( #diem
+points(
     @key
     @distributed_by
     # XXX This breaks the search index.  @source should not be derived from another @source
@@ -209,6 +212,24 @@ function extract_header_doc over(
 
 header_doc += extract_header_doc(doc_id,content) :- articles(doc_id,content, _,_,_,_,_,_,_,_).
 
+##############################################
+#@extraction
+#law_modify(
+#    law_id text,
+#    numerical_symbol_modified_law   text,
+#    name_modified_law   text,
+#    modified_law_id     text    
+#).
+#
+#function extract_law_modify over(
+#    doc_id text,
+#    title text,
+#    header_text text
+#) return rows like law_modify
+#    implementation "udf/extract_law_modify.py" handles tsv lines.
+#
+#law_modify += extract_law_modify(doc_id,title,header_text) :- articles(doc_id,_,_,_,_,title,_,_,_,_),header_doc(
+#doc_id, header_text)
 #@extraction
 #label_change(
 #    @key 
@@ -226,16 +247,13 @@ header_doc += extract_header_doc(doc_id,content) :- articles(doc_id,content, _,_
 #
 #label_change += extract_change_label(doc_id, sentence_text) :- sentence(doc_id, sentence_index, sentence_text, _, _, _, 
 #_,_),header_doc(doc_id,sentence_index).
+##############################################################
 
-
-
-##lấy title văn bản cần update : 
 get_title_update_law(
     @key
     @references(relation="articles", column="id", alias="articles")
     doc_id  text,
-    doc_content text,
-    date text
+    doc_content text
 ).
 function extract_get_title_update_law over(
     doc_id  text,
@@ -245,25 +263,20 @@ function extract_get_title_update_law over(
 get_title_update_law += extract_get_title_update_law(doc_id,header_text):-header_doc(doc_id,header_text).
 
 #lấy id văn bản cần update :
-# get_id_update_law(
-#     @key
-#     @references(relation="articles", column="id", alias="articles")
-#     doc_id text
-# ).
-# function extract_get_id_update_law over(
-#     doc_content text,
-#     doc_id text,
-#     name_title text,    
-#     numerical_symbol text
+get_id_update_law(
+    @key
+    @references(relation="articles", column="id", alias="articles")
+    doc_id text
+).
+function extract_get_id_update_law over(
+    doc_content text,
+    doc_id text,
+    name_title text,    
+    numerical_symbol text
 
-# )   returns rows like get_id_update_law
-#         implementation "udf/extract_get_id_update_law.py" handles tsv lines.
-# get_id_update_law += extract_get_id_update_law(doc_id,doc_content,name_title,numerical_symbol):-get_title_update_law(_,doc_content),articles(doc_id,_,numerical_symbol,_,_,name_title,_,_,_,_).
-
-
-
-
-
+)   returns rows like get_id_update_law
+        implementation "udf/extract_get_id_update_law.py" handles tsv lines.
+get_id_update_law += extract_get_id_update_law(doc_id,doc_content,name_title,numerical_symbol):-get_title_update_law(_,doc_content),articles(doc_id,_,numerical_symbol,_,_,name_title,_,_,_,_).
 ############################################
 articles_full_title (
     @key
@@ -284,13 +297,13 @@ link_modify_articles(
     doc_id text,
     modify_doc_id text
 ).
-link_modify_articles(doc_id, modify_doc_id) :- articles_full_title (modify_doc_id,full_title), articles(modify_doc_id,_,symbol,_,_,_,_,_,_,_), get_title_update_law(doc_id,text,_),
+link_modify_articles(doc_id, modify_doc_id) :- articles_full_title (modify_doc_id,full_title), articles(modify_doc_id,_,symbol,_,_,_,_,_,_,_), get_title_update_law(doc_id,text),
 [text = full_title].
 
-link_modify_articles(doc_id, modify_doc_id) :- articles_full_title (modify_doc_id,full_title), articles(modify_doc_id,_,symbol,_,_,_,_,_,_,_), get_title_update_law(doc_id,text,_),
+link_modify_articles(doc_id, modify_doc_id) :- articles_full_title (modify_doc_id,full_title), articles(modify_doc_id,_,symbol,_,_,_,_,_,_,_), get_title_update_law(doc_id,text),
 [text = symbol].
 
-
+link_modify_articles(doc_id,"N/A") :- get_title_update_law(doc_id,_),EXISTS[link_modify_articles(doc_id, _)].
 
 ##phân tách cách sửa đổi văn bản : 
 get_type_update_law(
@@ -320,13 +333,18 @@ get_type_update_law += extract_get_type_update_law_1(law_id,totalLaw,law_content
 ## lấy nội dung sửa đổi trong dấu "" tiêu đề sửa đổi và số hiệu văn bản cần sửa đổi.
 
 get_info_update_law(
-    @key
-    @references(relation="articles",column ="id", alias="articles")
     law_id text,
+    part_index int,
+    chap_index int,
+    sec_index int,
+    law_index int,
+    item_index int,
+    point_index int,
     numerical_symbol text,
     title  text,
     content text,
-    location_content int
+    location_content int,
+    count int
 ).
 function extract_get_info_update_law over(
     law_id text,
@@ -336,10 +354,54 @@ function extract_get_info_update_law over(
     item_content text,
     totalpoint int,
     point_content text,
-    name_title text
+    part_index int,
+    chap_index int,
+    sec_index int,
+    law_index int,
+    item_index int,
+    point_index int
     ) returns rows like get_info_update_law
         implementation "udf/extract_get_info_update_law.py" handles tsv lines.
-get_info_update_law += extract_get_info_update_law(law_id,totalLaw,law_content,totalItem,item_content,totalpoint,point_content,name_title):-laws(law_id,part_index,chap_index,sec_index,totalLaw,law_index,_,_,_,law_content),items(law_id,part_index,chap_index,sec_index,law_index,totalItem,item_index,_,_,_,item_content),points(law_id,part_index,chap_index,sec_index,law_index,item_index,totalpoint,_,_,_,_,point_content),articles(law_id,_,_,_,_,name_title,_,_,_,_).
+get_info_update_law += extract_get_info_update_law(law_id,totalLaw,law_content,totalItem,item_content,totalpoint,point_content,part_index,chap_index,sec_index,law_index,item_index,point_index):-laws(law_id,part_index,chap_index,sec_index,totalLaw,law_index,_,_,_,law_content),items(law_id,part_index,chap_index,sec_index,law_index,totalItem,item_index,_,_,_,item_content),points(law_id,part_index,chap_index,sec_index,law_index,item_index,totalpoint,point_index,_,_,_,point_content).
+######################
+@extraction
+extract_modify(
+    law_id text,
+    part_index int,
+    chap_index int,
+    sec_index int,
+    law_index int,
+    item_index int,
+    point_index int,
+    part_modify_name text,
+    chap_modify_name text,
+    sec_modify_name text,
+    law_modify_name text,
+    item_modify_name text,
+    point_modify_name text,
+    type int
+).
+
+#mode_modify = 1 : bo sung sua doi
+#mode_modify = 2 : bo sung
+
+function extract_modify_law over(
+    law_id text,
+    part_index int,
+    chap_index int,
+    sec_index int,
+    law_index int,
+    item_index int,
+    point_index int,
+    numerical_symbol text,
+    title  text,
+    content text,
+    location_content int,
+    count int
+    ) returns rows like extract_modify
+        implementation "udf/extract_modify.py" handles tsv lines.
+extract_modify += extract_modify_law(law_id,part_index,chap_index,sec_index,law_index,item_index ,point_index ,numerical_symbol,title,content,location_content ,count):-get_info_update_law(law_id,part_index ,chap_index ,sec_index ,law_index ,item_index ,point_index ,numerical_symbol,title,content,location_content,count).
+
 
 ## lấy thông tin update van ban trừ trường hợp sửa đổi, bổ sung
 ## type = 7

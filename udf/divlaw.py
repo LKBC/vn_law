@@ -35,8 +35,9 @@ def reFind(string,array):
 #do dai cua list
 def lenIterator(list):
 	sum = 0
-	for i in list :
-		sum += 1
+	if list != None :
+		for i in list :
+			sum += 1
 	return sum
 def itemInQuote(string, index) :
 	quotes = re.finditer(r"(\“(.(?!\“|\”))+.{2})|(\"(.(?!\"))+.{2})", string,re.DOTALL)
@@ -48,12 +49,12 @@ def itemInQuote(string, index) :
 def divPart(string):
 	limitText = len(string)
 	partIndex = []
-	it = re.finditer(r"(\n\*\*Phần thứ\s)", string)
+	it = re.finditer(r"\\n(\*|\s|\#|\_|\.)*(Phần thứ|PHẦN THỨ)\s", string)
 	sum = 0
 	quotes = re.finditer(r"(\“(.(?!\“|\”))+.{2})|(\"(.(?!\"))+.{2})", string,re.DOTALL)
 	sumQoutes = lenIterator(quotes)
 	if lenIterator(it) > 0 :
-		it = re.finditer(r"(\n\*\*Phần thứ\s)", string)
+		it = re.finditer(r"\\n(\*|\s|\#|\_|\.)*(Phần thứ|PHẦN THỨ)\s", string)
 		for match in it:
 			if sumQoutes > 0 :
 				if itemInQuote(string, match.span()[0]) == False :
@@ -73,22 +74,36 @@ def divPart(string):
 					"start":partIndex[i],
 					"end": (partIndex[i+1]),
 					"totalChap": "",
-					"chaps": ""
+					"chaps": "",
+					"name" : ""
 				}
 				res = divChapter(string[partIndex[i]:partIndex[i+1]],partIndex[i])
 				part['chaps'] = res[0]
 				part['totalChap'] = res[1]
+				findName = re.finditer(r"(Phần thứ|PHẦN THỨ)\s([A-z]|À|Á|Â|Ã|È|É|Ê|Ì|Í|Ò|Ó|Ô|Õ|Ù|Ú|Ă|Đ|Ĩ|Ũ|Ơ|à|á|â|ã|è|é|ê|ì|í|ò|ó|ô|õ|ù|ú|ă|đ|ĩ|ũ|ơ|Ư|Ă|Ạ|Ả|Ấ|Ầ|Ẩ|Ẫ|Ậ|Ắ|Ằ|Ẳ|Ẵ|Ặ|Ẹ|Ẻ|Ẽ|Ề|Ề|Ể|ư|ă|ạ|ả|ấ|ầ|ẩ|ẫ|ậ|ắ|ằ|ẳ|ẵ|ặ|ẹ|ẻ|ẽ|ề|ế|ể|Ễ|Ệ|Ỉ|Ị|Ọ|Ỏ|Ố|Ồ|Ổ|Ỗ|Ộ|Ớ|Ờ|Ở|Ỡ|Ợ|Ụ|Ủ|Ứ|Ừ|ễ|ệ|ỉ|ị|ọ|ỏ|ố|ồ|ổ|ỗ|ộ|ớ|ờ|ở|ỡ|ợ|ụ|ủ|ứ|ừ|Ử|Ữ|Ự|Ỳ|Ỵ|Ý|Ỷ|Ỹ|ử|ữ|ự|ỳ|ỵ|ỷ|ỹ)+",string[partIndex[i]:len(string)])
+				if lenIterator(findName)>0 :
+					findName = re.finditer(r"(Phần thứ|PHẦN THỨ)\s([A-z]|À|Á|Â|Ã|È|É|Ê|Ì|Í|Ò|Ó|Ô|Õ|Ù|Ú|Ă|Đ|Ĩ|Ũ|Ơ|à|á|â|ã|è|é|ê|ì|í|ò|ó|ô|õ|ù|ú|ă|đ|ĩ|ũ|ơ|Ư|Ă|Ạ|Ả|Ấ|Ầ|Ẩ|Ẫ|Ậ|Ắ|Ằ|Ẳ|Ẵ|Ặ|Ẹ|Ẻ|Ẽ|Ề|Ề|Ể|ư|ă|ạ|ả|ấ|ầ|ẩ|ẫ|ậ|ắ|ằ|ẳ|ẵ|ặ|ẹ|ẻ|ẽ|ề|ế|ể|Ễ|Ệ|Ỉ|Ị|Ọ|Ỏ|Ố|Ồ|Ổ|Ỗ|Ộ|Ớ|Ờ|Ở|Ỡ|Ợ|Ụ|Ủ|Ứ|Ừ|ễ|ệ|ỉ|ị|ọ|ỏ|ố|ồ|ổ|ỗ|ộ|ớ|ờ|ở|ỡ|ợ|ụ|ủ|ứ|ừ|Ử|Ữ|Ự|Ỳ|Ỵ|Ý|Ỷ|Ỹ|ử|ữ|ự|ỳ|ỵ|ỷ|ỹ)+",string[partIndex[i]:len(string)])
+					for fN in findName:
+						part['name'] = string[partIndex[i]+fN.span()[0]:partIndex[i]+fN.span()[1]]
+						break
 				listParts.append(part)
 			else :
 				part = {
 					"start":partIndex[i],
 					"end": limitText,
 					"totalChap": "",
-					"chaps": ""
+					"chaps": "",
+					"name" : ""
 				}
 				res = divChapter(string[partIndex[i]:limitText],partIndex[i])
 				part['chaps'] = res[0]
 				part['totalChap'] = res[1]
+				findName = re.finditer(r"(Phần thứ|PHẦN THỨ)\s([A-z]|À|Á|Â|Ã|È|É|Ê|Ì|Í|Ò|Ó|Ô|Õ|Ù|Ú|Ă|Đ|Ĩ|Ũ|Ơ|à|á|â|ã|è|é|ê|ì|í|ò|ó|ô|õ|ù|ú|ă|đ|ĩ|ũ|ơ|Ư|Ă|Ạ|Ả|Ấ|Ầ|Ẩ|Ẫ|Ậ|Ắ|Ằ|Ẳ|Ẵ|Ặ|Ẹ|Ẻ|Ẽ|Ề|Ề|Ể|ư|ă|ạ|ả|ấ|ầ|ẩ|ẫ|ậ|ắ|ằ|ẳ|ẵ|ặ|ẹ|ẻ|ẽ|ề|ế|ể|Ễ|Ệ|Ỉ|Ị|Ọ|Ỏ|Ố|Ồ|Ổ|Ỗ|Ộ|Ớ|Ờ|Ở|Ỡ|Ợ|Ụ|Ủ|Ứ|Ừ|ễ|ệ|ỉ|ị|ọ|ỏ|ố|ồ|ổ|ỗ|ộ|ớ|ờ|ở|ỡ|ợ|ụ|ủ|ứ|ừ|Ử|Ữ|Ự|Ỳ|Ỵ|Ý|Ỷ|Ỹ|ử|ữ|ự|ỳ|ỵ|ỷ|ỹ)+",string[partIndex[i]:len(string)])
+				if lenIterator(findName)>0 :
+					findName = re.finditer(r"(Phần thứ|PHẦN THỨ)\s([A-z]|À|Á|Â|Ã|È|É|Ê|Ì|Í|Ò|Ó|Ô|Õ|Ù|Ú|Ă|Đ|Ĩ|Ũ|Ơ|à|á|â|ã|è|é|ê|ì|í|ò|ó|ô|õ|ù|ú|ă|đ|ĩ|ũ|ơ|Ư|Ă|Ạ|Ả|Ấ|Ầ|Ẩ|Ẫ|Ậ|Ắ|Ằ|Ẳ|Ẵ|Ặ|Ẹ|Ẻ|Ẽ|Ề|Ề|Ể|ư|ă|ạ|ả|ấ|ầ|ẩ|ẫ|ậ|ắ|ằ|ẳ|ẵ|ặ|ẹ|ẻ|ẽ|ề|ế|ể|Ễ|Ệ|Ỉ|Ị|Ọ|Ỏ|Ố|Ồ|Ổ|Ỗ|Ộ|Ớ|Ờ|Ở|Ỡ|Ợ|Ụ|Ủ|Ứ|Ừ|ễ|ệ|ỉ|ị|ọ|ỏ|ố|ồ|ổ|ỗ|ộ|ớ|ờ|ở|ỡ|ợ|ụ|ủ|ứ|ừ|Ử|Ữ|Ự|Ỳ|Ỵ|Ý|Ỷ|Ỹ|ử|ữ|ự|ỳ|ỵ|ỷ|ỹ)+",string[partIndex[i]:len(string)])
+					for fN in findName:
+						part['name'] = string[partIndex[i]+fN.span()[0]:partIndex[i]+fN.span()[1]]
+						break
 				listParts.append(part)
 		result['[parts'] = listParts
 	else :
@@ -101,7 +116,8 @@ def divPart(string):
 					"start": 0,
 					"end": len(string),
 					"totalChap": "",
-					"chaps": ""
+					"chaps": "",
+					"name": ""
 				}
 		res = divChapter(string,0)
 		part['chaps'] = res[0]
@@ -109,10 +125,10 @@ def divPart(string):
 		listParts.append(part)
 	result['parts'] = listParts
 	return result
-
+#(\\n(\*|\s|\#|\_|\“|\")*(Chương|CHƯƠNG)\s([A-Z]|[0-9])+)
 #Chia theo chuong
 def divChapter(string, startIndex) :
-	it = re.finditer(r"(\*\*(\_|)*(Chương|CHƯƠNG)\s(\w|[0-9])+(\:|\s|\.|\_|)*)", string)
+	it = re.finditer(r"\\n(\*|\s|\#|\_)*(Chương|CHƯƠNG)\s([A-Z]|[0-9])", string)
 	chapterIndex = [] #chuoi cac index bat dau cua cac chapter
 	listChaps = []
 	sum =  0
@@ -120,7 +136,7 @@ def divChapter(string, startIndex) :
 	sumQoutes = lenIterator(quotes)
 	a = lenIterator(it)
 	if  a >0:
-		it = re.finditer(r"\*\*(\_|)*(Chương|CHƯƠNG)\s(\w|[0-9])+(\:|\s|\.|\_|)*", string)
+		it = re.finditer(r"\\n(\*|\s|\#|\_)*(Chương|CHƯƠNG)\s([A-Z]|[0-9])", string)
 		for match in it:
 			if sumQoutes > 0 :
 				if itemInQuote(string, match.span()[0]) == False :
@@ -129,37 +145,50 @@ def divChapter(string, startIndex) :
 				chapterIndex.append(match.span()[0])
 		sum = len(chapterIndex)
 	if sum > 0 :
-		for match in it:
-		    chapterIndex.append(match.span()[0])
 		for j in range(0,len(chapterIndex)):
-			if j!=(len(chapterIndex)-1):
+			if j != (len(chapterIndex)-1):
 				chap = {
 					"start":(chapterIndex[j]+startIndex),
 					"end": (chapterIndex[j+1]+startIndex),
 					"totalSec": "",
-					"secs": ""
+					"secs": "",
+					"name": ""
 				}
 				res = divSection(string[chapterIndex[j]:chapterIndex[j+1]],chapterIndex[j]+startIndex)
 				chap['secs'] = res[0]
 				chap['totalSec'] = res[1]
+				findName = re.finditer(r"(Chương|CHƯƠNG)\s([A-Z]|[0-9])+",string[chapterIndex[j]:len(string)])
+				if lenIterator(findName)>0 :
+					findName = re.finditer(r"(Chương|CHƯƠNG)\s([A-Z]|[0-9])+",string[chapterIndex[j]:len(string)])
+					for fN in findName:
+						chap['name'] = string[chapterIndex[j]+fN.span()[0]:chapterIndex[j]+fN.span()[1]]
+						break
 				listChaps.append(chap)
 			else :
 				chap = {
 					"start":chapterIndex[j]+startIndex,
 					"end": len(string)+startIndex,
 					"totalSec": "",
-					"secs": ""
+					"secs": "",
+					"name": ""
 				}
 				res = divSection(string[chapterIndex[j]:len(string)],chapterIndex[j]+startIndex)
 				chap['secs'] = res[0]
 				chap['totalSec'] = res[1]
+				findName = re.finditer(r"(Chương|CHƯƠNG)\s([A-Z]|[0-9])+",string[chapterIndex[j]:len(string)])
+				if lenIterator(findName)>0 :
+					findName = re.finditer(r"(Chương|CHƯƠNG)\s([A-Z]|[0-9])+",string[chapterIndex[j]:len(string)])
+					for fN in findName:
+						chap['name'] = string[chapterIndex[j]+fN.span()[0]:chapterIndex[j]+fN.span()[1]]
+						break
 				listChaps.append(chap)
 	else :
 		chap = {
 					"start": startIndex ,
 					"end": startIndex+len(string),
 					"totalSec": "",
-					"secs": ""
+					"secs": "",
+					"name": ""
 				}
 		res = divSection(string,startIndex)
 		chap['secs'] = res[0]
@@ -172,7 +201,7 @@ def divChapter(string, startIndex) :
 
 #Chia theo muc
 def divSection(string, startIndex):
-	it = re.finditer(r"(\*\*(\_|)*(Mục|MỤC)\s(\w|[0-9])+(\_|\.|\s)*)", string)
+	it = re.finditer(r"(\\n(\*|\s|\#|\_|\.)*(Mục|MỤC)\s(\w|[0-9])+(\_|\.|\s)*)", string)
 	sectionIndex = []
 	listSecs = []
 	sum = 0
@@ -180,7 +209,7 @@ def divSection(string, startIndex):
 	quotes = re.finditer(r"(\“(.(?!\“|\”))+.{2})|(\"(.(?!\"))+.{2})", string,re.DOTALL)
 	sumQoutes = lenIterator(quotes)
 	if a>0:
-		it = re.finditer(r"(\*\*(\_|)*(Mục|MỤC)\s(\w|[0-9])+(\_|\.|\s)*)", string)
+		it = re.finditer(r"(\\n(\*|\s|\#|\_|\.)*(Mục|MỤC)\s(\w|[0-9])+(\_|\.|\s)*)", string)
 		for match in it:
 			if sumQoutes > 0:
 				if itemInQuote(string, match.span()[0]) == False :
@@ -195,29 +224,44 @@ def divSection(string, startIndex):
 					"start":(sectionIndex[j]+startIndex),
 					"end": (sectionIndex[j+1]+startIndex),
 					"totalLaw": "",
-					"laws": ""
+					"laws": "",
+					"name": ""
 				}
 				res = divLaw(string[sectionIndex[j]:sectionIndex[j+1]],sectionIndex[j]+startIndex)
 				sec['laws'] = res[0]
 				sec['totalLaw'] = res[1]
+				findName = re.finditer(r"(Mục|MỤC)\s([A-Z]|[0-9])+",string[sectionIndex[j]:len(string)])
+				if lenIterator(findName)>0 :
+					findName = re.finditer(r"(Mục|MỤC)\s([A-Z]|[0-9])+",string[sectionIndex[j]:len(string)])
+					for fN in findName:
+						sec['name'] = string[sectionIndex[j]+fN.span()[0]:sectionIndex[j]+fN.span()[1]]
+						break
 				listSecs.append(sec)
 			else :
 				sec = {
 					"start":sectionIndex[j]+startIndex,
 					"end": len(string) +startIndex,
 					"totalLaw": "",
-					"laws": ""
+					"laws": "",
+					"name":""
 				}
 				res = divLaw(string[sectionIndex[j]:len(string)],sectionIndex[j]+startIndex)
 				sec['laws'] = res[0]
 				sec['totalLaw'] = res[1]
+				findName = re.finditer(r"(Mục|MỤC)\s([A-Z]|[0-9])+",string[sectionIndex[j]:len(string)])
+				if lenIterator(findName)>0 :
+					findName = re.finditer(r"(Mục|MỤC)\s([A-Z]|[0-9])+",string[sectionIndex[j]:len(string)])
+					for fN in findName:
+						sec['name'] = string[sectionIndex[j]+fN.span()[0]:sectionIndex[j]+fN.span()[1]]
+						break
 				listSecs.append(sec)
 	else :
 		sec = {
 					"start": startIndex,
 					"end": startIndex+len(string),
 					"totalLaw": "",
-					"laws": ""
+					"laws": "",
+					"name":""
 				}
 		res = divLaw(string,startIndex)
 		sec['laws'] = res[0]
@@ -231,7 +275,7 @@ def divSection(string, startIndex):
 #chia theo dieu
 #dont need change name variable
 def divLaw(string,startIndex):
-	it = re.finditer(r"((\\n\s*(\*\*\s*)*)|(\*\*\s*)){1}Điều [0-9]+\w*", string)
+	it = re.finditer(r"\\n(\*|\s|\#|\_)*(Điều|ĐIỀU)\s[0-9]+(\w|Đ|đ)*", string)
 	sectionIndex = []
 	listSecs = []
 	sum = 0
@@ -239,7 +283,7 @@ def divLaw(string,startIndex):
 	quotes = re.finditer(r"(\“(.(?!\“|\”))+.{2})|(\"(.(?!\"))+.{2})", string,re.DOTALL)
 	sumQoutes = lenIterator(quotes)
 	if a>0:
-		it = re.finditer(r"((\\n\s*(\*\*\s*)*)|(\*\*\s*)){1}Điều [0-9]+\w*", string)
+		it = re.finditer(r"\\n(\*|\s|\#|\_)*(Điều|ĐIỀU)\s[0-9]+(\w|Đ|đ)*", string)
 		for match in it:
 			if sumQoutes > 0 :
 				if itemInQuote(string, match.span()[0]) == False :
@@ -257,9 +301,9 @@ def divLaw(string,startIndex):
 					"items":"",
 					"name": ""
 				}
-				findName = re.finditer(r"Điều [0-9]+\w*",string[sectionIndex[j]:len(string)])
+				findName = re.finditer(r"Điều [0-9]+(\w|Đ|đ)*",string[sectionIndex[j]:len(string)])
 				if lenIterator(findName)>0 :
-					findName = re.finditer(r"Điều [0-9]+\w*",string[sectionIndex[j]:len(string)])
+					findName = re.finditer(r"Điều [0-9]+(\w|Đ|đ)*",string[sectionIndex[j]:len(string)])
 					for fN in findName:
 						sec['name'] = string[sectionIndex[j]+fN.span()[0]:sectionIndex[j]+fN.span()[1]]
 						break
@@ -275,9 +319,9 @@ def divLaw(string,startIndex):
 					"items":"",
 					"name":""
 				}
-				findName = re.finditer(r"Điều [0-9]+\w*",string[sectionIndex[j]:len(string)])
+				findName = re.finditer(r"Điều [0-9]+(\w|Đ|đ)*",string[sectionIndex[j]:len(string)])
 				if lenIterator(findName)>0 :
-					findName = re.finditer(r"Điều [0-9]+\w*",string[sectionIndex[j]:len(string)])
+					findName = re.finditer(r"Điều [0-9]+(\w|Đ|đ)*",string[sectionIndex[j]:len(string)])
 					for fN in findName:
 						sec['name'] = string[sectionIndex[j]+fN.span()[0]:sectionIndex[j]+fN.span()[1]]
 						break
@@ -303,7 +347,7 @@ def divLaw(string,startIndex):
 	return resultlist
 
 def divItem(string,startIndex) :
-	it = re.finditer(r"\\n(\s|\*|\_)*[0-9]+", string)
+	it = re.finditer(r"\\n(\*|\s|\#|\_)*[0-9]+(\w|Đ|đ)*", string)
 	sectionIndex = []
 	listSecs = []
 	sum = 0
@@ -312,7 +356,7 @@ def divItem(string,startIndex) :
 	a = lenIterator(it)
 
 	if a>0:
-		it = re.finditer(r"\\n(\s|\*|\_)*[0-9]+", string)
+		it = re.finditer(r"\\n(\*|\s|\#|\_)*[0-9]+(\w|Đ|đ)*", string)
 		for match in it:
 			if sumQoutes > 0 :
 				if itemInQuote(string, match.span()[0]) == False :
@@ -330,9 +374,9 @@ def divItem(string,startIndex) :
 					"totalPoint": "",
 					"points": ""
 				}
-				findName = re.finditer(r"[0-9]+",string[sectionIndex[j]:len(string)])
+				findName = re.finditer(r"[0-9]+(\w|Đ|đ)*",string[sectionIndex[j]:len(string)])
 				if lenIterator(findName)>0 :
-					findName = re.finditer(r"[0-9]+",string[sectionIndex[j]:len(string)])
+					findName = re.finditer(r"[0-9]+(\w|Đ|đ)*",string[sectionIndex[j]:len(string)])
 					for fN in findName:
 						sec['name'] = string[sectionIndex[j]+fN.span()[0]:sectionIndex[j]+fN.span()[1]]
 						break
@@ -348,9 +392,9 @@ def divItem(string,startIndex) :
 					"totalPoint": "",
 					"points": ""
 				}
-				findName = re.finditer(r"[0-9]+",string[sectionIndex[j]:len(string)])
+				findName = re.finditer(r"[0-9]+(\w|Đ|đ)*",string[sectionIndex[j]:len(string)])
 				if lenIterator(findName)>0 :
-					findName = re.finditer(r"[0-9]+",string[sectionIndex[j]:len(string)])
+					findName = re.finditer(r"[0-9]+(\w|Đ|đ)*",string[sectionIndex[j]:len(string)])
 					for fN in findName:
 						sec['name'] = string[sectionIndex[j]+fN.span()[0]:sectionIndex[j]+fN.span()[1]]
 						break
@@ -372,16 +416,16 @@ def divItem(string,startIndex) :
 	resultlist.append(sum)
 	return resultlist
 def divPoint(string,startIndex) :
-	it = re.finditer(r"\\n(\s|\*|\_)*(\w|đ)+\)", string)
+	it = re.finditer(r"\\n(\s|\*|\_|\#)*(\w|đ)+(\s|\*|\_)*\)", string)
 	sectionIndex = []
 	listSecs = []
 	sum = 0
-	quotes = re.finditer(r"\\n(\s|\*|\_)*(\"|\“)([^\"\“]|\–|\’)*(\"|\”)(\.)*(?=\\n)", string)
+	quotes = re.finditer(r"(\“(.(?!\“|\”))+.{2})|(\"(.(?!\"))+.{2})", string)
 	sumQoutes = lenIterator(quotes)
 	a = lenIterator(it)
 
 	if a>0:
-		it = re.finditer(r"\\n(\s|\*|\_)*(\w|đ)+\)", string)
+		it = re.finditer(r"\\n(\s|\*|\_|\#)*(\w|đ)+(\s|\*|\_)*\)", string)
 		for match in it:
 			if sumQoutes > 0 :
 				if itemInQuote(string, match.span()[0]) == False :
@@ -462,6 +506,8 @@ def getTotalLaw(result,indexPart,indexChapter,indexSec) :
 
 def getTotalItem(result,indexPart,indexChapter,indexSec,indexLaw) :
 	return result['parts'][indexPart]['chaps'][indexChapter]['secs'][indexSec]['laws'][indexLaw]['totalItem']
+def getTotalPoint(result,indexPart,indexChapter,indexSec,indexLaw,indexItem):
+	return result['parts'][indexPart]['chaps'][indexChapter]['secs'][indexSec]['laws'][indexLaw]['items'][indexItem]['totalPoint']
 
 def getPart(result,index):
 	return result['parts'][index]
@@ -478,4 +524,417 @@ def getLaw(result, indexPart, indexChapter, indexSec, index):
 def getItem(result, indexPart, indexChapter, indexSec, indexLaw, index):
 	return result['parts'][indexPart]['chaps'][indexChapter]['secs'][indexSec]['laws'][indexLaw]['items'][index]
 
+def getPoint(result, indexPart, indexChapter, indexSec, indexLaw, indexItem, index):
+	return result['parts'][indexPart]['chaps'][indexChapter]['secs'][indexSec]['laws'][indexLaw]['items'][indexItem]['points'][index]
+
 #problem with iterator -> generator
+#################################
+def divPartModifyLaw(string):
+	limitText = len(string)
+	partIndex = []
+	it = re.finditer(r"\\n(\*|\s|\#|\_|\“|\")*(Phần thứ|PHẦN THỨ)\s", string)
+	if lenIterator(it) > 0 :
+		it = re.finditer(r"\\n(\*|\s|\#|\_|\“|\")*(Phần thứ|PHẦN THỨ)\s", string)
+		for match in it:
+			partIndex.append(match.span()[0]+2)
+		result = {
+			"totalPart": len(partIndex),
+			"parts" : ""
+		}
+		listParts = []
+		for i in range(0,len(partIndex)):
+			if i!=(len(partIndex)-1):
+				part = {
+					"start":partIndex[i],
+					"end": (partIndex[i+1]),
+					"totalChap": "",
+					"chaps": "",
+					"name": "",
+				}
+				res = divChapterModifyLaw(string[partIndex[i]:partIndex[i+1]],partIndex[i])
+				part['chaps'] = res[0]
+				part['totalChap'] = res[1]
+				findName = re.finditer(r"(Phần thứ|PHẦN THỨ)\s([A-z]|À|Á|Â|Ã|È|É|Ê|Ì|Í|Ò|Ó|Ô|Õ|Ù|Ú|Ă|Đ|Ĩ|Ũ|Ơ|à|á|â|ã|è|é|ê|ì|í|ò|ó|ô|õ|ù|ú|ă|đ|ĩ|ũ|ơ|Ư|Ă|Ạ|Ả|Ấ|Ầ|Ẩ|Ẫ|Ậ|Ắ|Ằ|Ẳ|Ẵ|Ặ|Ẹ|Ẻ|Ẽ|Ề|Ề|Ể|ư|ă|ạ|ả|ấ|ầ|ẩ|ẫ|ậ|ắ|ằ|ẳ|ẵ|ặ|ẹ|ẻ|ẽ|ề|ế|ể|Ễ|Ệ|Ỉ|Ị|Ọ|Ỏ|Ố|Ồ|Ổ|Ỗ|Ộ|Ớ|Ờ|Ở|Ỡ|Ợ|Ụ|Ủ|Ứ|Ừ|ễ|ệ|ỉ|ị|ọ|ỏ|ố|ồ|ổ|ỗ|ộ|ớ|ờ|ở|ỡ|ợ|ụ|ủ|ứ|ừ|Ử|Ữ|Ự|Ỳ|Ỵ|Ý|Ỷ|Ỹ|ử|ữ|ự|ỳ|ỵ|ỷ|ỹ)+",string[partIndex[i]:len(string)])
+				if lenIterator(findName)>0 :
+					findName = re.finditer(r"(Phần thứ|PHẦN THỨ)\s([A-z]|À|Á|Â|Ã|È|É|Ê|Ì|Í|Ò|Ó|Ô|Õ|Ù|Ú|Ă|Đ|Ĩ|Ũ|Ơ|à|á|â|ã|è|é|ê|ì|í|ò|ó|ô|õ|ù|ú|ă|đ|ĩ|ũ|ơ|Ư|Ă|Ạ|Ả|Ấ|Ầ|Ẩ|Ẫ|Ậ|Ắ|Ằ|Ẳ|Ẵ|Ặ|Ẹ|Ẻ|Ẽ|Ề|Ề|Ể|ư|ă|ạ|ả|ấ|ầ|ẩ|ẫ|ậ|ắ|ằ|ẳ|ẵ|ặ|ẹ|ẻ|ẽ|ề|ế|ể|Ễ|Ệ|Ỉ|Ị|Ọ|Ỏ|Ố|Ồ|Ổ|Ỗ|Ộ|Ớ|Ờ|Ở|Ỡ|Ợ|Ụ|Ủ|Ứ|Ừ|ễ|ệ|ỉ|ị|ọ|ỏ|ố|ồ|ổ|ỗ|ộ|ớ|ờ|ở|ỡ|ợ|ụ|ủ|ứ|ừ|Ử|Ữ|Ự|Ỳ|Ỵ|Ý|Ỷ|Ỹ|ử|ữ|ự|ỳ|ỵ|ỷ|ỹ)+",string[partIndex[i]:len(string)])
+					for fN in findName:
+						part['name'] = string[partIndex[i]+fN.span()[0]:partIndex[i]+fN.span()[1]]
+						break
+				listParts.append(part)
+			else :
+				part = {
+					"start":partIndex[i],
+					"end": limitText,
+					"totalChap": "",
+					"chaps": "",
+					"name": ""
+				}
+				res = divChapterModifyLaw(string[partIndex[i]:limitText],partIndex[i])
+				part['chaps'] = res[0]
+				part['totalChap'] = res[1]
+				listParts.append(part)
+				findName = re.finditer(r"(Phần thứ|PHẦN THỨ)\s([A-z]|À|Á|Â|Ã|È|É|Ê|Ì|Í|Ò|Ó|Ô|Õ|Ù|Ú|Ă|Đ|Ĩ|Ũ|Ơ|à|á|â|ã|è|é|ê|ì|í|ò|ó|ô|õ|ù|ú|ă|đ|ĩ|ũ|ơ|Ư|Ă|Ạ|Ả|Ấ|Ầ|Ẩ|Ẫ|Ậ|Ắ|Ằ|Ẳ|Ẵ|Ặ|Ẹ|Ẻ|Ẽ|Ề|Ề|Ể|ư|ă|ạ|ả|ấ|ầ|ẩ|ẫ|ậ|ắ|ằ|ẳ|ẵ|ặ|ẹ|ẻ|ẽ|ề|ế|ể|Ễ|Ệ|Ỉ|Ị|Ọ|Ỏ|Ố|Ồ|Ổ|Ỗ|Ộ|Ớ|Ờ|Ở|Ỡ|Ợ|Ụ|Ủ|Ứ|Ừ|ễ|ệ|ỉ|ị|ọ|ỏ|ố|ồ|ổ|ỗ|ộ|ớ|ờ|ở|ỡ|ợ|ụ|ủ|ứ|ừ|Ử|Ữ|Ự|Ỳ|Ỵ|Ý|Ỷ|Ỹ|ử|ữ|ự|ỳ|ỵ|ỷ|ỹ)+",string[partIndex[i]:len(string)])
+				if lenIterator(findName)>0 :
+					findName = re.finditer(r"(Phần thứ|PHẦN THỨ)\s([A-z]|À|Á|Â|Ã|È|É|Ê|Ì|Í|Ò|Ó|Ô|Õ|Ù|Ú|Ă|Đ|Ĩ|Ũ|Ơ|à|á|â|ã|è|é|ê|ì|í|ò|ó|ô|õ|ù|ú|ă|đ|ĩ|ũ|ơ|Ư|Ă|Ạ|Ả|Ấ|Ầ|Ẩ|Ẫ|Ậ|Ắ|Ằ|Ẳ|Ẵ|Ặ|Ẹ|Ẻ|Ẽ|Ề|Ề|Ể|ư|ă|ạ|ả|ấ|ầ|ẩ|ẫ|ậ|ắ|ằ|ẳ|ẵ|ặ|ẹ|ẻ|ẽ|ề|ế|ể|Ễ|Ệ|Ỉ|Ị|Ọ|Ỏ|Ố|Ồ|Ổ|Ỗ|Ộ|Ớ|Ờ|Ở|Ỡ|Ợ|Ụ|Ủ|Ứ|Ừ|ễ|ệ|ỉ|ị|ọ|ỏ|ố|ồ|ổ|ỗ|ộ|ớ|ờ|ở|ỡ|ợ|ụ|ủ|ứ|ừ|Ử|Ữ|Ự|Ỳ|Ỵ|Ý|Ỷ|Ỹ|ử|ữ|ự|ỳ|ỵ|ỷ|ỹ)+",string[partIndex[i]:len(string)])
+					for fN in findName:
+						part['name'] = string[partIndex[i]+fN.span()[0]:partIndex[i]+fN.span()[1]]
+						break
+		result['[parts'] = listParts
+	else :
+		result = {
+			"totalPart": 0,
+			"parts" : "",
+		}
+		listParts = []
+		part = {
+					"start": 0,
+					"end": len(string),
+					"totalChap": "",
+					"chaps": "",
+					"name": ""
+				}
+		res = divChapterModifyLaw(string,0)
+		part['chaps'] = res[0]
+		part['totalChap'] = res[1]
+		listParts.append(part)
+	result['parts'] = listParts
+	return result
+
+#Chia theo chuong
+def divChapterModifyLaw(string, startIndex) :
+	it = re.finditer(r"(\\n(\*|\s|\#|\_|\“|\")*(Chương|CHƯƠNG)\s([A-Z]|[0-9])+)", string)
+	chapterIndex = [] #chuoi cac index bat dau cua cac chapter
+	listChaps = []
+	a = lenIterator(it)
+	if  a >0:
+		it = re.finditer(r"(\\n(\*|\s|\#|\_|\“|\")*(Chương|CHƯƠNG)\s([A-Z]|[0-9])+)", string)
+		for match in it:
+			chapterIndex.append(match.span()[0])
+		for j in range(0,len(chapterIndex)):
+			if j!=(len(chapterIndex)-1):
+				chap = {
+					"start":(chapterIndex[j]+startIndex),
+					"end": (chapterIndex[j+1]+startIndex),
+					"totalSec": "",
+					"secs": "",
+					"name": ""
+				}
+				res = divSectionModifyLaw(string[chapterIndex[j]:chapterIndex[j+1]],chapterIndex[j]+startIndex)
+				chap['secs'] = res[0]
+				chap['totalSec'] = res[1]
+				findName = re.finditer(r"(Chương|CHƯƠNG)\s([A-Z]|[0-9])+)",string[chapterIndex[j]:len(string)])
+				if lenIterator(findName)>0 :
+					findName = re.finditer(r"(Chương|CHƯƠNG)\s([A-Z]|[0-9])+)",string[chapterIndex[j]:len(string)])
+					for fN in findName:
+						chap['name'] = string[chapterIndex[j]+fN.span()[0]:chapterIndex[j]+fN.span()[1]]
+						break
+				listChaps.append(chap)
+			else :
+				chap = {
+					"start":chapterIndex[j]+startIndex,
+					"end": len(string)+startIndex,
+					"totalSec": "",
+					"secs": "",
+					"name": ""
+				}
+				res = divSectionModifyLaw(string[chapterIndex[j]:len(string)],chapterIndex[j]+startIndex)
+				chap['secs'] = res[0]
+				chap['totalSec'] = res[1]
+				findName = re.finditer(r"(Chương|CHƯƠNG)\s([A-Z]|[0-9])+)",string[chapterIndex[j]:len(string)])
+				if lenIterator(findName)>0 :
+					findName = re.finditer(r"(Chương|CHƯƠNG)\s([A-Z]|[0-9])+)",string[chapterIndex[j]:len(string)])
+					for fN in findName:
+						chap['name'] = string[chapterIndex[j]+fN.span()[0]:chapterIndex[j]+fN.span()[1]]
+						break
+				listChaps.append(chap)
+	else :
+		chap = {
+					"start": startIndex ,
+					"end": startIndex+len(string),
+					"totalSec": "",
+					"secs": "",
+					"name": ""
+				}
+		res = divSectionModifyLaw(string,startIndex)
+		chap['secs'] = res[0]
+		chap['totalSec'] = res[1]
+		listChaps.append(chap)
+	resultlist = []
+	resultlist.append(listChaps)
+	resultlist.append(a)
+	return resultlist	
+
+#Chia theo muc
+def divSectionModifyLaw(string, startIndex):
+	it = re.finditer(r"(\\n(\*|\s|\#|\_|\“|\"|\.)*(Mục|MỤC)\s([A-Z]|[0-9])+)", string)
+	sectionIndex = []
+	listSecs = []
+	a = lenIterator(it)
+	if a>0:
+		it = re.finditer(r"(\\n(\*|\s|\#|\_|\“|\"|\.)*(Mục|MỤC)\s([A-Z]|[0-9])+)", string)
+		for match in it:
+			if sumQoutes > 0:
+				sectionIndex.append(match.span()[0])
+		for j in range(0,len(sectionIndex)):
+			if j!=(len(sectionIndex)-1):
+				sec = {
+					"start":(sectionIndex[j]+startIndex),
+					"end": (sectionIndex[j+1]+startIndex),
+					"totalLaw": "",
+					"laws": "",
+					"name": ""
+				}
+				res = divLawModifyLaw(string[sectionIndex[j]:sectionIndex[j+1]],sectionIndex[j]+startIndex)
+				sec['laws'] = res[0]
+				sec['totalLaw'] = res[1]
+				findName = re.finditer(r"(Mục|MỤC)\s([A-Z]|[0-9])+",string[sectionIndex[j]:len(string)])
+				if lenIterator(findName)>0 :
+					findName = re.finditer(r"(Mục|MỤC)\s([A-Z]|[0-9])+",string[sectionIndex[j]:len(string)])
+					for fN in findName:
+						sec['name'] = string[sectionIndex[j]+fN.span()[0]:sectionIndex[j]+fN.span()[1]]
+						break
+				listSecs.append(sec)
+			else :
+				sec = {
+					"start":sectionIndex[j]+startIndex,
+					"end": len(string) +startIndex,
+					"totalLaw": "",
+					"laws": "",
+					"name": ""
+				}
+				res = divLawModifyLaw(string[sectionIndex[j]:len(string)],sectionIndex[j]+startIndex)
+				sec['laws'] = res[0]
+				sec['totalLaw'] = res[1]
+				findName = re.finditer(r"(Mục|MỤC)\s([A-Z]|[0-9])+",string[sectionIndex[j]:len(string)])
+				if lenIterator(findName)>0 :
+					findName = re.finditer(r"(Mục|MỤC)\s([A-Z]|[0-9])+",string[sectionIndex[j]:len(string)])
+					for fN in findName:
+						sec['name'] = string[sectionIndex[j]+fN.span()[0]:sectionIndex[j]+fN.span()[1]]
+						break
+				listSecs.append(sec)
+	else :
+		sec = {
+					"start": startIndex,
+					"end": startIndex+len(string),
+					"totalLaw": "",
+					"laws": "",
+					"name": ""
+				}
+		res = divLawModifyLaw(string,startIndex)
+		sec['laws'] = res[0]
+		sec['totalLaw'] = res[1]
+		listSecs.append(sec)
+	resultlist = []
+	resultlist.append(listSecs)
+	resultlist.append(a)
+	return resultlist
+
+#chia theo dieu
+#dont need change name variable
+def divLawModifyLaw(string,startIndex):
+	it = re.finditer(r"\\n(\*|\s|\#|\_|\“|\"|\.)*Điều [0-9]+(\w|Đ|đ)*", string)
+	sectionIndex = []
+	listSecs = []
+	a = lenIterator(it)
+	if a>0:
+		it = re.finditer(r"\\n(\*|\s|\#|\_|\“|\"|\.)*Điều [0-9]+(\w|Đ|đ)*", string)
+		for match in it:
+			sectionIndex.append(match.span()[0]+2)
+		for j in range(0,len(sectionIndex)):
+			if j!=(len(sectionIndex)-1):
+				sec = {
+					"start":(sectionIndex[j]+startIndex),
+					"end": (sectionIndex[j+1]+startIndex),
+					"totalItem": "",
+					"items":"",
+					"name": ""
+				}
+				findName = re.finditer(r"Điều [0-9]+(\w|Đ|đ)+",string[sectionIndex[j]:len(string)])
+				if lenIterator(findName)>0 :
+					findName = re.finditer(r"Điều [0-9]+(\w|Đ|đ)*",string[sectionIndex[j]:len(string)])
+					for fN in findName:
+						sec['name'] = string[sectionIndex[j]+fN.span()[0]:sectionIndex[j]+fN.span()[1]]
+						break
+				res = divItemModifyLaw(string[sectionIndex[j]:sectionIndex[j+1]],sectionIndex[j]+startIndex)
+				sec['items'] = res[0]
+				sec['totalItem'] = res[1]
+				listSecs.append(sec)
+			else :
+				sec = {
+					"start":sectionIndex[j]+startIndex,
+					"end": len(string) +startIndex,
+					"totalItem": "",
+					"items":"",
+					"name":""
+				}
+				findName = re.finditer(r"Điều [0-9]+(\w|Đ|đ)*",string[sectionIndex[j]:len(string)])
+				if lenIterator(findName)>0 :
+					findName = re.finditer(r"Điều [0-9]+(\w|Đ|đ)*",string[sectionIndex[j]:len(string)])
+					for fN in findName:
+						sec['name'] = string[sectionIndex[j]+fN.span()[0]:sectionIndex[j]+fN.span()[1]]
+						break
+				res = divItemModifyLaw(string[sectionIndex[j]:len(string)],sectionIndex[j]+startIndex)
+				sec['items'] = res[0]
+				sec['totalItem'] = res[1]
+				listSecs.append(sec)
+	else :
+		sec = {
+					"start": startIndex,
+					"end": startIndex+len(string),
+					"totalItem": "",
+					"items":"",
+					"name": ""
+				}
+		res = divItemModifyLaw(string,startIndex)
+		sec['items'] = res[0]
+		sec['totalItem'] = res[1]
+		listSecs.append(sec)
+	resultlist = []
+	resultlist.append(listSecs)
+	resultlist.append(a)
+	return resultlist
+
+def divItemModifyLaw(string,startIndex) :
+	it = re.finditer(r"\\n(\*|\s|\#|\_|\“|\"|\.)*[0-9]+(\w|Đ|đ)*", string)
+	sectionIndex = []
+	listSecs = []
+	a = lenIterator(it)
+	if a>0:
+		it = re.finditer(r"\\n(\*|\s|\#|\_|\“|\"|\.)*[0-9]+(\w|Đ|đ)*", string)
+		for match in it:
+			sectionIndex.append(match.span()[0])
+		for j in range(0,len(sectionIndex)):
+			if j!=(len(sectionIndex)-1):
+				sec = {
+					"start":(sectionIndex[j]+startIndex)+2,
+					"end": (sectionIndex[j+1]+startIndex)+2,
+					"name": "",
+					"totalPoint": "",
+					"points": ""
+				}
+				findName = re.finditer(r"[0-9]+(\w|Đ|đ)*",string[sectionIndex[j]:len(string)])
+				if lenIterator(findName)>0 :
+					findName = re.finditer(r"[0-9]+(\w|Đ|đ)*",string[sectionIndex[j]:len(string)])
+					for fN in findName:
+						sec['name'] = string[sectionIndex[j]+fN.span()[0]:sectionIndex[j]+fN.span()[1]]
+						break
+				res = divPointModifyLaw(string[sectionIndex[j]:sectionIndex[j+1]],sectionIndex[j]+startIndex)
+				sec['points'] = res[0]
+				sec['totalPoint'] = res[1]
+				listSecs.append(sec)
+			else :
+				sec = {
+					"start":sectionIndex[j]+startIndex+2,
+					"end": len(string) + startIndex,
+					"name": "",
+					"totalPoint": "",
+					"points": ""
+				}
+				findName = re.finditer(r"[0-9]+\w*",string[sectionIndex[j]:len(string)])
+				if lenIterator(findName)>0 :
+					findName = re.finditer(r"[0-9]+\w*",string[sectionIndex[j]:len(string)])
+					for fN in findName:
+						sec['name'] = string[sectionIndex[j]+fN.span()[0]:sectionIndex[j]+fN.span()[1]]
+						break
+				res = divPointModifyLaw(string[sectionIndex[j]:len(string)],sectionIndex[j]+startIndex)
+				sec['points'] = res[0]
+				sec['totalPoint'] = res[1]
+				listSecs.append(sec)
+	else :
+		sec = {
+					"start": startIndex,
+					"end": startIndex+len(string),
+					"name": "",
+					"totalPoint": "",
+					"points": ""
+				}
+		listSecs.append(sec)
+		res = divPointModifyLaw(string,startIndex)
+		sec['points'] = res[0]
+		sec['totalPoint'] = res[1]
+	resultlist = []
+	resultlist.append(listSecs)
+	resultlist.append(a)
+	return resultlist
+def divPointModifyLaw(string,startIndex) :
+	it = re.finditer(r"\\n(\*|\s|\#|\_|\“|\"|\.)*(\w|đ)+(\*|\s|\#|\_|\“|\"|\.)*\)", string)
+	sectionIndex = []
+	listSecs = []
+	a = lenIterator(it)
+	if a>0:
+		it = re.finditer(r"\\n(\*|\s|\#|\_|\“|\"|\.)*(\w|đ)+(\*|\s|\#|\_|\“|\"|\.)*\)", string)
+		for match in it:
+			sectionIndex.append(match.span()[0])
+		for j in range(0,len(sectionIndex)):
+			if j!=(len(sectionIndex)-1):
+				sec = {
+					"start":(sectionIndex[j]+startIndex)+2,
+					"end": (sectionIndex[j+1]+startIndex),
+					"name": ""
+				}
+				findName = re.finditer(r"(\w|đ)+",string[sectionIndex[j]+2:len(string)])
+				if lenIterator(findName)>0 :
+					findName = re.finditer(r"(\w|đ)+",string[sectionIndex[j]+2:len(string)])
+					for fN in findName:
+						sec['name'] = string[sectionIndex[j]+2+fN.span()[0]:sectionIndex[j]+2+fN.span()[1]]
+						break
+				listSecs.append(sec)
+			else :
+				sec = {
+					"start":sectionIndex[j]+startIndex+2,
+					"end": len(string) +startIndex,
+					"name":""
+				}
+				findName = re.finditer(r"(\w|đ)+",string[sectionIndex[j]+2:len(string)])
+				if lenIterator(findName)>0 :
+					findName = re.finditer(r"(\w|đ)+",string[sectionIndex[j]+2:len(string)])
+					for fN in findName:
+						sec['name'] = string[sectionIndex[j]+2+fN.span()[0]:sectionIndex[j]+2+fN.span()[1]]
+						break
+				listSecs.append(sec)
+	else :
+		sec = {
+					"start": startIndex,
+					"end": startIndex+len(string),
+					"name": ""
+				}
+		listSecs.append(sec)
+	resultlist = []
+	resultlist.append(listSecs)
+	resultlist.append(a)
+	return resultlist
+	## sua lai get name
+def getCover(law):
+	result = []
+	if (law['totalPart']>0):
+		result.append(1)
+		result.append(law['totalPart']['parts'][0]['name'])
+		return result
+	elif getTotalChapter(law,0) > 0:
+		chapter = getChapter(law,0,0)
+		result.append(2)
+		result.append(chapter['name'])
+		return result
+	elif getTotalSection(law,0,0) > 0:
+		section = getSection(law,0,0,0)
+		result.append(3)
+		result.append(section['name'])
+		return result
+	elif getTotalLaw(law,0,0,0):
+		law = getLaw(law,0,0,0,0)
+		result.append(4)
+		result.append(law['name'])
+		return result
+	elif getTotalItem(law,0,0,0,0):
+		item = getItem(law,0,0,0,0,0)
+		result.append(5)
+		result.append(item[name])
+		return result
+	elif getTotalPoint(law,0,0,0,0,0):
+		point = getPoint(law,0,0,0,0,0,0)
+		result.append(6)
+		result.append(point['name'])
+		return result
+	return None
+
+
